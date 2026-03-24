@@ -328,6 +328,7 @@ elif menu == "Visualization":
 
         st.pyplot(fig) 
 
+        
         # -----------------------------
 # PAGE 5 – AI INSIGHTS
 # -----------------------------
