@@ -262,8 +262,10 @@ elif menu == "Visualization":
         st.warning("Upload dataset first")
 
     else:
-
         st.header("Data Visualization")
+
+    
+        sample_df = df.sample(min(100, len(df)))
 
         chart = st.selectbox(
             "Chart type",
@@ -277,47 +279,65 @@ elif menu == "Visualization":
             ]
         )
 
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(6,4))  
 
         if chart == "Histogram":
 
-            col = st.selectbox("Column", df.columns)
+            col = st.selectbox("Column", df.select_dtypes(include='number').columns)
 
-            ax.hist(df[col].dropna())
+            ax.hist(sample_df[col].dropna(), bins=20)
+            ax.set_title(f"Distribution of {col}")
 
         elif chart == "Scatter":
 
-            x = st.selectbox("X axis", df.columns)
-            y = st.selectbox("Y axis", df.columns)
+            numeric_cols = df.select_dtypes(include='number').columns
 
-            ax.scatter(df[x], df[y])
+            x = st.selectbox("X axis", numeric_cols)
+            y = st.selectbox("Y axis", numeric_cols)
+
+            ax.scatter(sample_df[x], sample_df[y])
+            ax.set_title(f"{y} vs {x}")
 
         elif chart == "Line":
 
-            x = st.selectbox("X axis", df.columns)
-            y = st.selectbox("Y axis", df.columns)
+            numeric_cols = df.select_dtypes(include='number').columns
 
-            ax.plot(df[x], df[y])
+            x = st.selectbox("X axis", numeric_cols)
+            y = st.selectbox("Y axis", numeric_cols)
+
+            
+            sorted_df = sample_df.sort_values(by=x)
+
+            ax.plot(sorted_df[x], sorted_df[y])
+            ax.set_title(f"{y} over {x}")
 
         elif chart == "Bar":
 
-            x = st.selectbox("Category column", df.columns)
-            y = st.selectbox("Value column", df.columns)
+            cat_cols = df.select_dtypes(include='object').columns
+            num_cols = df.select_dtypes(include='number').columns
 
-            ax.bar(df[x], df[y])
+            x = st.selectbox("Category column", cat_cols)
+            y = st.selectbox("Value column", num_cols)
+
+            grouped = df.groupby(x)[y].mean()
+
+            ax.bar(grouped.index, grouped.values)
+            ax.set_title(f"Average {y} by {x}")
+
+            plt.xticks(rotation=45)
 
         elif chart == "Box Plot":
 
-            col = st.selectbox("Column", df.columns)
+            col = st.selectbox("Column", df.select_dtypes(include='number').columns)
 
-            ax.boxplot(df[col].dropna())
+            ax.boxplot(sample_df[col].dropna())
+            ax.set_title(f"Boxplot of {col}")
 
         elif chart == "Correlation Heatmap":
 
             corr = df.corr(numeric_only=True)
 
             cax = ax.matshow(corr)
-
             fig.colorbar(cax)
 
             ax.set_xticks(range(len(corr.columns)))
@@ -326,8 +346,13 @@ elif menu == "Visualization":
             ax.set_xticklabels(corr.columns, rotation=90)
             ax.set_yticklabels(corr.columns)
 
-        st.pyplot(fig) 
+            ax.set_title("Correlation Heatmap")
 
+        st.pyplot(fig)
+          
+
+           
+          
         
         # -----------------------------
 # PAGE 5 – AI INSIGHTS
